@@ -3,23 +3,28 @@ import Flight from '../../models/Flight';
 import ErrorWidget from '../ErrorWidget';
 import { useNavigate } from 'react-router-dom';
 import FlightRow from './FlightRow';
+import { fetchData } from '../../utility';
+import APIResponse from '../../models/APIResponse';
 
-const FlightsLandingPage = function () {
+const FlightsLandingPage = function ({
+  httpCall
+}: {
+  httpCall: (url: string) => Promise<APIResponse>;
+}) {
   const navigate = useNavigate();
   const [flights, setFlights] = useState<Flight[]>([]);
   const [statusCode, setStatusCode] = useState<number>(200);
 
   const [apiCallTrigger, setTrigger] = useState<number>(0);
-  console.log(process.env);
+
   useEffect(() => {
     const url = `${process.env.REACT_APP_API_BASE_URL}/flights`;
 
-    fetch(url)
-      .then(async (response: Response) => {
-        console.log(response);
+    httpCall(url)
+      .then((response: APIResponse) => {
         setStatusCode(response.status);
         if (response.ok) {
-          const flightData: Flight[] = (await response.json()) as Flight[];
+          const flightData: Flight[] = response.data as Flight[];
           setFlights(flightData);
         }
         setTimeout(() => {
@@ -33,7 +38,7 @@ const FlightsLandingPage = function () {
     return (
       <div className="flights-container">
         <table>
-          <tbody>
+          <thead>
             <tr>
               <th>Flight Number</th>
               <th>Airline</th>
@@ -42,6 +47,8 @@ const FlightsLandingPage = function () {
               <th>Departure time</th>
               <th>Status</th>
             </tr>
+          </thead>
+          <tbody data-testid="flights-table">
             {flights.map((flight: Flight) => {
               return (
                 <FlightRow

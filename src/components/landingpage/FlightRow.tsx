@@ -9,7 +9,10 @@ const FlightRow = function ({
   navigate: (toUrl: string) => void;
 }) {
   return (
-    <tr onClick={() => navigate(`/flights/${flight.id}`)}>
+    <tr
+      data-testid={`table-row${flight.id}`}
+      onClick={() => navigate(`/flights/${flight.id}`)}
+    >
       <td>{flight.flightNumber}</td>
       <td>{flight.airline}</td>
       <td>{flight.origin}</td>

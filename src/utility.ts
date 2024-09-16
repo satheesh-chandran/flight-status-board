@@ -1,3 +1,4 @@
+import APIResponse from './models/APIResponse';
 import FlightStatus from './models/FlightStatus';
 
 const getStatusColorCode = (status: FlightStatus) => {
@@ -11,4 +12,14 @@ const getStatusColorCode = (status: FlightStatus) => {
   }
 };
 
-export { getStatusColorCode };
+const fetchData = function (url: string): Promise<APIResponse> {
+  return fetch(url).then(async (response: Response) => {
+    return {
+      status: response.status,
+      ok: response.ok,
+      data: await response.json()
+    };
+  });
+};
+
+export { getStatusColorCode, fetchData };

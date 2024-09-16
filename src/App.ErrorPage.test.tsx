@@ -1,11 +1,14 @@
-import { act } from 'react';
-import { cleanup, fireEvent, render, screen } from '@testing-library/react';
+import {
+  cleanup,
+  render,
+  screen,
+  fireEvent,
+  act
+} from '@testing-library/react';
 import App from './App';
-
+import sinon from 'sinon';
 import Flight from './models/Flight';
 import FlightStatus from './models/FlightStatus';
-
-import sinon from 'sinon';
 
 const flight1: Flight = {
   id: 1,
@@ -17,54 +20,44 @@ const flight1: Flight = {
   status: FlightStatus.Boarding
 };
 
-const flight2: Flight = {
-  id: 2,
-  flightNumber: 'A3B65',
-  airline: 'Airline 2',
-  origin: 'Origin 2',
-  destination: 'Destination 2',
-  departureTime: '2024-09-15T14:21:43.355Z',
-  status: FlightStatus.Departed
-};
-
-afterEach(() => {
-  cleanup();
-  jest.clearAllMocks();
-  sinon.restore();
-});
-
-test('Should render home page and go to Flight View page on click', async () => {
+test('should render error widget in FlightViewPage on error and navigate to home page', async () => {
   const BASE_URL: string = 'http://localhost:8080';
   process.env.REACT_APP_API_BASE_URL = BASE_URL;
-  cleanup();
+
   const mockHttp = sinon.stub();
+
   mockHttp.withArgs(`${BASE_URL}/flights`).returns(
     Promise.resolve({
       status: 200,
       ok: true,
-      data: [flight1, flight2]
+      data: [flight1]
     })
   );
 
   mockHttp.withArgs(`${BASE_URL}/flights/1`).returns(
     Promise.resolve({
-      status: 200,
-      ok: true,
-      data: flight1
+      status: 404,
+      ok: false,
+      data: { error: 'Flight not found' }
     })
   );
 
   render(<App httpCall={mockHttp} />);
 
   const row1: HTMLElement = await screen.findByTestId('table-row1');
-  const row2: HTMLElement = await screen.findByTestId('table-row2');
 
-  expect(row1).toBeInTheDocument();
-  expect(row2).toBeInTheDocument();
+  expect(row1).toBeTruthy();
 
   await act(async () => {
     fireEvent.click(row1);
   });
 
-  expect(screen.getByText(/Departure :/)).toBeInTheDocument();
+  const linkElement = screen.getByText(/Home Page/);
+  expect(linkElement).toBeInTheDocument();
+
+  await act(async () => {
+    fireEvent.click(linkElement);
+  });
+  const firsRow: HTMLElement = await screen.findByTestId('table-row1');
+  expect(firsRow).toBeInTheDocument();
 });
